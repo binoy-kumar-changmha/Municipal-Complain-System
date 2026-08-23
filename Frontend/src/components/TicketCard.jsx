@@ -1,4 +1,7 @@
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import StatusStamp from "./StatusStamp";
+import { ImageIcon, X } from "lucide-react";
 
 function ticketNumber(id) {
   if (!id) return "------";
@@ -17,6 +20,16 @@ function formatDate(d) {
 }
 
 export default function TicketCard({ complaint, footer, showReporter = false }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  let textDesc = complaint.description || "";
+  let imgUrl = null;
+  const match = textDesc.match(/\[IMAGE:\s*(.*?)\]/);
+  if (match) {
+    imgUrl = match[1];
+    textDesc = textDesc.replace(match[0], "").trim();
+  }
+
   return (
     <div className="animate-rise flex overflow-hidden rounded-lg border border-line bg-paper shadow-[0_1px_2px_rgba(24,38,54,0.06)]">
       {/* stub */}
@@ -44,28 +57,66 @@ export default function TicketCard({ complaint, footer, showReporter = false }) 
           <StatusStamp status={complaint.status} />
         </div>
 
-        <p className="text-sm leading-relaxed text-slate/90">{complaint.description}</p>
+        <p className="text-sm leading-relaxed text-slate/90 whitespace-pre-wrap break-words">{textDesc}</p>
+        
+        <div className="flex gap-2 text-sm mt-1">
+          <span className="font-medium text-slate/50">Location:</span>
+          <span className="text-slate break-all sm:break-words">{complaint.location}</span>
+        </div>
 
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-1 border-t border-dashed border-line pt-3 text-sm sm:grid-cols-2">
-          <div className="flex gap-2">
-            <dt className="font-medium text-slate/50">Location</dt>
-            <dd className="text-slate">{complaint.location}</dd>
+        {imgUrl && (
+          <div className="mt-1">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex w-fit items-center gap-2 rounded-md bg-paper px-3 py-1.5 text-sm font-medium text-slate transition hover:bg-slate/5 border border-line"
+            >
+              <ImageIcon className="h-4 w-4 text-slate/50" />
+              View Photo
+            </button>
+
+            {isModalOpen && createPortal(
+              <div 
+                className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm sm:p-10"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-paper/10 text-parchment transition hover:bg-paper/20 sm:right-8 sm:top-8"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+                <img 
+                  src={imgUrl} 
+                  alt="Complaint attachment full size" 
+                  className="max-h-full max-w-full rounded-md object-contain shadow-2xl"
+                  onClick={(e) => e.stopPropagation()} 
+                />
+              </div>,
+              document.body
+            )}
           </div>
-          {showReporter && (
-            <>
-              <div className="flex gap-2">
-                <dt className="font-medium text-slate/50">Reported by</dt>
-                <dd className="text-slate">{complaint.name}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-medium text-slate/50">Phone</dt>
-                <dd className="text-slate">{complaint.phone}</dd>
-              </div>
-            </>
-          )}
-        </dl>
+        )}
 
-        {footer && <div className="pt-1">{footer}</div>}
+        {(showReporter || footer) && (
+          <div className="mt-2 border-t border-dashed border-line pt-3 text-sm">
+            {showReporter && (
+              <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 mb-3">
+                <div className="flex gap-2">
+                  <span className="font-medium text-slate/50">Reported by:</span>
+                  <span className="text-slate">{complaint.name}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-medium text-slate/50">Phone:</span>
+                  <span className="text-slate">{complaint.phone}</span>
+                </div>
+              </div>
+            )}
+            {footer && <div>{footer}</div>}
+          </div>
+        )}
+
+
+
       </div>
     </div>
   );

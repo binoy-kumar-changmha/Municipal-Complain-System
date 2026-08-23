@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import TicketCard from "../components/TicketCard";
+import toast from "react-hot-toast";
 
 const FILTERS = ["All", "Pending", "Accepted", "Resolved", "Rejected"];
 
@@ -9,8 +10,9 @@ export default function AdminDashboard() {
   const { admin, logoutAdmin } = useAuth();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [acceptingId, setAcceptingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [resolvingId, setResolvingId] = useState(null);
   const [filter, setFilter] = useState("All");
 
   const authHeaders = useMemo(
@@ -20,19 +22,18 @@ export default function AdminDashboard() {
 
   const fetchComplaints = async () => {
     setLoading(true);
-    setError("");
     try {
       const { data } = await api.get("/complain-list/Admin", authHeaders);
       if (data.success) {
         setComplaints(data.complainList || []);
       } else {
-        setError(data.message || "Couldn't load the ledger.");
+        toast.error(data.message || "Couldn't load the ledger.");
       }
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         logoutAdmin();
       }
-      setError(err.response?.data?.message || "Couldn't load the ledger.");
+      toast.error(err.response?.data?.message || "Couldn't load the ledger.");
     } finally {
       setLoading(false);
     }
@@ -45,17 +46,55 @@ export default function AdminDashboard() {
 
   const handleAccept = async (id) => {
     setAcceptingId(id);
+    const toastId = toast.loading("Accepting ticket...");
     try {
       const { data } = await api.patch(`/complains/${id}/accept`, {}, authHeaders);
       if (data.success) {
         setComplaints((prev) =>
           prev.map((c) => (c._id === id ? { ...c, status: "Accepted" } : c))
         );
+        toast.success("Ticket accepted", { id: toastId });
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Couldn't accept that ticket.");
+      toast.error(err.response?.data?.message || "Couldn't accept that ticket.", { id: toastId });
     } finally {
       setAcceptingId(null);
+    }
+  };
+
+  const handleReject = async (id) => {
+    setRejectingId(id);
+    const toastId = toast.loading("Rejecting ticket...");
+    try {
+      const { data } = await api.patch(`/complains/${id}/reject`, {}, authHeaders);
+      if (data.success) {
+        setComplaints((prev) =>
+          prev.map((c) => (c._id === id ? { ...c, status: "Rejected" } : c))
+        );
+        toast.success("Ticket rejected", { id: toastId });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't reject that ticket.", { id: toastId });
+    } finally {
+      setRejectingId(null);
+    }
+  };
+
+  const handleResolve = async (id) => {
+    setResolvingId(id);
+    const toastId = toast.loading("Resolving ticket...");
+    try {
+      const { data } = await api.patch(`/complains/${id}/resolve`, {}, authHeaders);
+      if (data.success) {
+        setComplaints((prev) =>
+          prev.map((c) => (c._id === id ? { ...c, status: "Resolved" } : c))
+        );
+        toast.success("Ticket resolved", { id: toastId });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't resolve that ticket.", { id: toastId });
+    } finally {
+      setResolvingId(null);
     }
   };
 
@@ -79,9 +118,6 @@ export default function AdminDashboard() {
           <h1 className="mt-1.5 font-display text-3xl font-semibold text-ink">
             Ward ledger
           </h1>
-          <p className="mt-1 text-sm text-slate/70">
-            Every ticket filed across the district, newest first.
-          </p>
         </div>
         <button
           onClick={fetchComplaints}
@@ -108,12 +144,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {error && (
-        <p className="mb-4 rounded-md border border-rust/30 bg-rust/5 px-3 py-2 text-sm font-medium text-rust">
-          {error}
-        </p>
-      )}
-
       {loading ? (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -136,18 +166,31 @@ export default function AdminDashboard() {
               showReporter
               footer={
                 c.status === "Pending" ? (
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => handleAccept(c._id)}
+                      disabled={acceptingId === c._id || rejectingId === c._id}
+                      className="rounded-full bg-forest px-4 py-1.5 text-xs font-medium text-parchment transition hover:bg-forest-light disabled:opacity-60"
+                    >
+                      {acceptingId === c._id ? "Accepting…" : "Accept ticket"}
+                    </button>
+                    <button
+                      onClick={() => handleReject(c._id)}
+                      disabled={acceptingId === c._id || rejectingId === c._id}
+                      className="rounded-full border border-rust text-rust px-4 py-1.5 text-xs font-medium transition hover:bg-rust/5 disabled:opacity-60"
+                    >
+                      {rejectingId === c._id ? "Rejecting…" : "Reject ticket"}
+                    </button>
+                  </div>
+                ) : c.status === "Accepted" ? (
                   <button
-                    onClick={() => handleAccept(c._id)}
-                    disabled={acceptingId === c._id}
-                    className="rounded-full bg-forest px-4 py-1.5 text-xs font-medium text-parchment transition hover:bg-forest-light disabled:opacity-60"
+                    onClick={() => handleResolve(c._id)}
+                    disabled={resolvingId === c._id}
+                    className="rounded-full bg-brass px-4 py-1.5 text-xs font-medium text-ink transition hover:bg-brass-light disabled:opacity-60"
                   >
-                    {acceptingId === c._id ? "Accepting…" : "Accept ticket"}
+                    {resolvingId === c._id ? "Resolving…" : "Resolve ticket"}
                   </button>
-                ) : (
-                  <span className="font-mono text-xs text-slate/40">
-                    No further action needed
-                  </span>
-                )
+                ) : null
               }
             />
           ))}

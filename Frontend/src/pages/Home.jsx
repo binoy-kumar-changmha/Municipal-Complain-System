@@ -1,26 +1,27 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-
-const STEPS = [
-  {
-    n: "File",
-    title: "Describe the issue",
-    body: "A broken streetlight, an overflowing bin, a pothole that's grown teeth — tell us what, and exactly where.",
-  },
-  {
-    n: "Track",
-    title: "Get a ticket number",
-    body: "Every report becomes a numbered stub in your ledger, stamped Pending the moment it lands.",
-  },
-  {
-    n: "Resolve",
-    title: "Watch the stamp change",
-    body: "Municipal staff review, accept, and work the ticket. You'll see the stamp update — no phone tag required.",
-  },
-];
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Home() {
-  const { citizen } = useAuth();
+  const { language } = useLanguage();
+  const isBn = language === "bn";
+
+  const STEPS = [
+    {
+      n: "Step 1",
+      title: isBn ? "সমস্যাটি বর্ণনা করুন" : "Describe the issue",
+      body: isBn ? "রাস্তার সমস্যা, ময়লা বা অন্যান্য সমস্যা কোথায় হয়েছে তা আমাদের জানান।" : "A broken streetlight, an overflowing bin, a pothole that's grown teeth — tell us what, and exactly where.",
+    },
+    {
+      n: "Step 2",
+      title: isBn ? "টিকিট নম্বর পান" : "Get a ticket number",
+      body: isBn ? "আপনার অভিযোগটি জমা দেওয়ার সাথে সাথে একটি ট্র্যাকিং নম্বর পাবেন।" : "Every report becomes a numbered stub in your ledger, stamped Pending the moment it lands.",
+    },
+    {
+      n: "Step 3",
+      title: isBn ? "সমাধান ট্র্যাক করুন" : "Watch the stamp change",
+      body: isBn ? "কর্মকর্তারা কাজ শুরু করলে আপনার টিকিটের স্ট্যাটাস আপডেট হবে।" : "Municipal staff review, accept, and work the ticket. You'll see the stamp update — no phone tag required.",
+    },
+  ];
 
   return (
     <div>
@@ -28,37 +29,52 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pt-20">
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="animate-rise">
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
-              Office of Public Works · Ward Ledger
-            </span>
-            <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
-              File it once.
-              <br />
-              <span className="italic text-brass">Watch</span> it get fixed.
+            <h1 className="mt-8 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink md:text-5xl lg:text-7xl">
+              {isBn ? (
+                <>
+                  পৌরসভা এখন
+                  <br />
+                  <span className="text-slate/40">
+                    আপনার হাতের
+                    <br />
+                    মুঠোয়
+                  </span>
+                </>
+              ) : (
+                <>
+                  Your municipality,
+                  <br />
+                  <span className="text-slate/40">
+                    now in your
+                    <br />
+                    pocket
+                  </span>
+                </>
+              )}
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-slate/80 sm:text-lg">
-              CivicDesk turns every pothole, outage, and overflowing bin into a
-              numbered ticket your municipality can't lose — and you can
-              actually track.
+            <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-slate/80 md:text-xl md:leading-relaxed">
+              {isBn
+                ? "সহজেই অভিযোগ জানান। দ্রুত সমাধান পান।"
+                : "Report issues easily. Track progress instantly."}
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
               <Link
-                to={citizen.token ? "/dashboard" : "/signup"}
-                className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-parchment shadow-sm transition hover:bg-ink-2"
+                to="/signup"
+                className="flex w-full items-center justify-center rounded-full bg-ink px-8 py-3.5 text-sm font-medium tracking-wide text-parchment transition hover:bg-ink-2 sm:w-auto sm:px-10"
               >
-                {citizen.token ? "Go to my desk" : "Report an issue"}
+                Report an issue
               </Link>
               <Link
                 to="/login"
-                className="text-sm font-medium text-ink underline decoration-brass decoration-2 underline-offset-4 hover:text-brass"
+                className="flex w-full items-center justify-center rounded-full border border-line bg-paper px-8 py-3.5 text-sm font-medium tracking-wide text-slate transition hover:border-slate/30 sm:w-auto sm:px-10"
               >
-                I already have an account
+                Track status
               </Link>
             </div>
           </div>
 
           {/* Signature element: a fanned stack of ticket stubs */}
-          <div className="relative mx-auto h-72 w-full max-w-sm sm:h-80">
+          <div className="relative mx-auto flex h-48 w-full max-w-sm items-center justify-center sm:h-56">
             <TicketStub
               className="absolute left-2 top-6 -rotate-6"
               status="Pending"
@@ -85,7 +101,7 @@ export default function Home() {
       <section className="border-y border-line/80 bg-paper">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
           <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-            How a report moves through the ledger
+            How it works?
           </h2>
           <div className="mt-10 grid gap-8 sm:grid-cols-3">
             {STEPS.map((s) => (
@@ -107,19 +123,23 @@ export default function Home() {
 
       {/* Staff callout */}
       <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-xl border border-line bg-ink px-6 py-8 text-parchment sm:flex-row sm:items-center sm:px-10">
+        <div className="flex flex-col items-center justify-center gap-1.5 font-mono text-sm tracking-widest text-brass md:flex-row md:gap-3">
+          <span>{isBn ? "সহজে জানান" : "FILE IT ONCE."}</span>
+          <span className="hidden h-1 w-1 rounded-full bg-brass/30 md:block" />
+          <span>{isBn ? "সমাধান পান" : "WATCH IT GET FIXED."}</span>
+        </div>
+        <div className="mt-8 flex flex-col items-start justify-between gap-6 rounded-xl border border-line bg-ink px-6 py-8 text-parchment sm:flex-row sm:items-center sm:px-10">
           <div>
             <h3 className="font-display text-xl font-semibold sm:text-2xl">
-              Work the queue as municipal staff
+              {isBn ? "পৌরসভার কর্মীদের জন্য" : "Work the queue as municipal staff"}
             </h3>
             <p className="mt-1.5 max-w-md text-sm text-parchment/70">
-              Review every open ticket across the ward and accept the ones
-              your crews are dispatching to.
+              {isBn ? "পৌরসভার স্টাফ হিসেবে লগইন করে অভিযোগগুলোর সমাধান করুন।" : "Review every open ticket across the ward and accept the ones your crews are dispatching to."}
             </p>
           </div>
           <Link
             to="/admin/login"
-            className="shrink-0 rounded-full bg-brass px-6 py-3 text-sm font-medium text-ink transition hover:bg-brass-light"
+            className="shrink-0 rounded-full bg-brass-light px-6 py-3 text-sm font-medium text-ink transition hover:bg-brass"
           >
             Staff sign-in
           </Link>
@@ -138,22 +158,22 @@ function TicketStub({ className, status, label, num }) {
       : "text-forest border-forest";
   return (
     <div
-      className={`w-52 rounded-lg border border-line bg-paper p-4 shadow-[0_8px_24px_rgba(24,38,54,0.12)] ${className}`}
+      className={`w-56 sm:w-60 rounded-xl border border-line bg-paper p-5 shadow-[0_8px_24px_rgba(24,38,54,0.12)] ${className}`}
     >
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] text-slate/40">#{num}</span>
+        <span className="font-mono text-xs text-slate/40">#{num}</span>
         <span
-          className={`stamp rounded-sm border-2 px-1.5 py-0.5 font-display text-[9px] font-semibold uppercase tracking-wider ${stampColor}`}
+          className={`stamp rounded-sm border-2 px-2 py-0.5 font-display text-[10px] font-semibold uppercase tracking-wider ${stampColor}`}
         >
           {status}
         </span>
       </div>
-      <p className="mt-3 font-display text-sm font-semibold text-ink">
+      <p className="mt-4 font-display text-base font-semibold text-ink">
         {label}
       </p>
-      <div className="mt-3 h-1.5 w-full rounded-full bg-line/70">
+      <div className="mt-4 h-2 w-full rounded-full bg-line/70">
         <div
-          className="h-1.5 rounded-full bg-brass"
+          className="h-2 rounded-full bg-brass"
           style={{
             width: status === "Pending" ? "20%" : status === "Accepted" ? "60%" : "100%",
           }}
