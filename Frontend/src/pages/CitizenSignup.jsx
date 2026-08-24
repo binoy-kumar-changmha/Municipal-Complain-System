@@ -2,31 +2,36 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import AuthCard, { Field, inputClass } from "../components/AuthCard";
+import PasswordInput from "../components/PasswordInput";
+import toast from "react-hot-toast";
 
 export default function CitizenSignup() {
   const { loginCitizen } = useAuth();
+  const { language } = useLanguage();
+  const isBn = language === "bn";
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", phone: "", password: "" });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    let toastId = toast.loading("Opening account...");
     try {
       const { data } = await api.post("/auth/sign-up", form);
       if (data.success) {
+        toast.success("Account created!", { id: toastId });
         loginCitizen(data.token, { ...data.user, name: form.name });
         navigate("/dashboard");
       } else {
-        setError(data.message || "Signup failed. Please try again.");
+        toast.error(data.message || "Signup failed. Please try again.", { id: toastId });
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Signup failed. Please try again.");
+      toast.error(err.response?.data?.message || "Signup failed. Please try again.", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -34,12 +39,12 @@ export default function CitizenSignup() {
 
   return (
     <AuthCard
-      eyebrow="New resident"
-      title="Open a ledger account"
-      subtitle="Register to file and track complaints with your municipality."
+      eyebrow={isBn ? "নতুন রেসিডেন্ট (New Resident)" : "New resident"}
+      title={isBn ? "নতুন অ্যাকাউন্ট খুলুন" : "Open a ledger account"}
+      subtitle={isBn ? "অভিযোগ জানাতে অ্যাকাউন্ট তৈরি করুন।" : "Register to file and track complaints with your municipality."}
       footer={
         <>
-          Already registered?{" "}
+          {isBn ? "ইতিমধ্যেই অ্যাকাউন্ট আছে? " : "Already registered? "}
           <Link to="/login" className="font-medium text-ink underline decoration-brass decoration-2 underline-offset-2 hover:text-brass">
             Log in
           </Link>
@@ -47,11 +52,6 @@ export default function CitizenSignup() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <p className="rounded-md border border-rust/30 bg-rust/5 px-3 py-2 text-sm font-medium text-rust">
-            {error}
-          </p>
-        )}
         <Field label="Full name">
           <input
             required
@@ -75,12 +75,10 @@ export default function CitizenSignup() {
           />
         </Field>
         <Field label="Password">
-          <input
+          <PasswordInput
             required
-            type="password"
             minLength={6}
             placeholder="At least 6 characters"
-            className={inputClass}
             value={form.password}
             onChange={update("password")}
           />

@@ -5,6 +5,8 @@ const userLoginRoute = require('./routes/userLoginRoute');
 const fetchComplainRoute = require('./routes/fetchComplainRoute')
 const deleteComplainRoute = require('./routes/deleteComplainRoute')
 const acceptComplainRoute= require('./routes/acceptComplainRoute')
+const rejectComplainRoute= require('./routes/rejectComplainRoute')
+const resolveComplainRoute= require('./routes/resolveComplainRoute')
 const adminLoginRoute = require('./routes/adminLoginRoute');
 const fetchComplainAdminRoute= require('./routes/fetchComplainAdminRoute')
 const express = require("express");
@@ -30,6 +32,8 @@ app.use("/", deleteComplainRoute);
 /*-------------------admin login --------------------*/ 
 app.use("/", adminLoginRoute);
 app.use("/",acceptComplainRoute);
+app.use("/",rejectComplainRoute);
+app.use("/",resolveComplainRoute);
 app.use("/",fetchComplainAdminRoute);
 
 app.get('/', (req, res) => {
