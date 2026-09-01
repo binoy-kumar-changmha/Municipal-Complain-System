@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { CitizenRoute, AdminRoute } from "./components/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
 
 import Home from "./pages/Home";
 import CitizenSignup from "./pages/CitizenSignup";
@@ -14,6 +15,7 @@ import NotFound from "./pages/NotFound";
 export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
+      <Toaster position="bottom-right" />
       <Navbar />
       <main className="flex-1">
         <Routes>
